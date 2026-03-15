@@ -136,10 +136,7 @@
 const levelRewards = [15, 20, 25, 40]; 
 let totalScore = 0; // هذا المتغير الذي سيتم رفعه لقاعدة البيانات
 // إضافة عنصر العداد للشاشة برمجياً
-const scoreDiv = document.createElement('div');
-scoreDiv.id = 'score-container';
-scoreDiv.innerHTML = 'النقاط: <span id="current-score">0</span>';
-document.body.appendChild(scoreDiv);
+
 
 function updateScoreUI(points) {
     const scoreElement = document.getElementById('current-score');
