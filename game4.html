@@ -139,20 +139,13 @@
     </style>
   </head>
   <body>
-    <button onclick="exitAndSave()" style="
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    padding: 10px 20px;
-    background: #f43f5e;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    z-index: 9999;
-    font-weight: bold;
-    font-family: sans-serif;
-">خروج وحفظ التقدّم ↩️</button>
+<button 
+    onmousedown="exitAndSave()" 
+    ontouchstart="exitAndSave()" 
+    style="position: fixed; top: 10px; right: 10px; padding: 12px 24px; background: #f43f5e; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 10000; font-weight: bold; font-size: 16px;">
+    خروج وحفظ التقدّم ↩️
+</button>
+
     <div class="container">
       <div id="score"></div>
       <canvas id="game" width="375" height="375"></canvas>
@@ -203,33 +196,47 @@ async function saveStickHeroProgress(addedPoints) {
     }
 }
 async function exitAndSave() {
-    // 1. تعريف الرابط والبيانات
-    const DATABASE_URL = "https://mygames-6db39-default-rtdb.firebaseio.com/";
+    // 1. البيانات الأساسية
+    const path = window.location.pathname;
+    const fileName = path.split('/').pop().split('.')[0] || "stick_hero";
     const playerName = localStorage.getItem('p_name') || "لاعب_مجهول";
-    const fileName = "stick_hero"; // تأكد من كتابة اسم اللعبة هنا بشكل صحيح
+    const DATABASE_URL = "https://mygames-6db39-default-rtdb.firebaseio.com/";
 
-    // 2. الحصول على النقاط الحالية من اللعبة
-    // ملاحظة: تأكد من اسم المتغير الذي يخزن النقاط في كودك (غالباً score أو points)
-    let currentScore = typeof score !== 'undefined' ? score : 0;
+    // 2. الحصول على النقاط (تأكد أن اسم المتغير في كودك هو score)
+    let sessionScore = typeof score !== 'undefined' ? score : 0;
+
+    // 3. تغيير شكل الزر
+    const btn = document.querySelector('button[onclick="exitAndSave()"]');
+    if (btn) {
+        btn.innerText = "جاري الحفظ... ⏳";
+        btn.style.background = "#666";
+    }
+
+    // --- مؤقت أمان (إذا لم يخرج خلال 3 ثواني، يخرج إجبارياً) ---
+    const safetyExit = setTimeout(() => {
+        window.location.href = "index.html";
+    }, 3000);
 
     try {
-        // 3. جلب النقاط القديمة وجمعها
+        // 4. جلب النقاط القديمة
         const response = await fetch(`${DATABASE_URL}/players/${playerName}/games/${fileName}.json`);
         const oldScore = await response.json() || 0;
-        const newTotalScore = Number(oldScore) + Number(currentScore);
 
-        // 4. الحفظ في Firebase
+        // 5. حفظ المجموع الجديد
+        const newTotalScore = Number(oldScore) + Number(sessionScore);
         await fetch(`${DATABASE_URL}/players/${playerName}/games/${fileName}.json`, {
             method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newTotalScore)
         });
 
-        // 5. الخروج الفوري (بدون شعارات أو تنبيهات)
-        window.location.replace("index.html"); 
+        // 6. الخروج الفوري وإلغاء مؤقت الأمان
+        clearTimeout(safetyExit);
+        window.location.href = "index.html";
 
     } catch (err) {
-        console.error("خطأ في الحفظ:", err);
-        window.location.replace("index.html"); // يخرج حتى لو فشل الإنترنت
+        console.error("خطأ:", err);
+        window.location.href = "index.html";
     }
 }
       Array.prototype.last = function () {
